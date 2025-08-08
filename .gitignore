@@ -1,0 +1,11 @@
+# Ignore all files except the ones we want to track
+*
+
+# Track these files
+!README.md
+!reqs.txt
+!requirements.txt
+!docker-compose.yml
+!Dockerfile
+!financial_report.py
+!.gitignore

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  financial-report:
+    build: .
+    environment:
+      - FIN_INCOME_VALUE=5000
+      - FIN_TAX_VALUE=1000
+      - FIN_FOOD_VALUE=1000
+      - FIN_UTILITY_VALUE=1000
+      - FIN_SAVINGS_VALUE=1000
+    volumes:
+      - ./data:/app/data
+    working_dir: /app/data
+    command: python /app/financial_report.py

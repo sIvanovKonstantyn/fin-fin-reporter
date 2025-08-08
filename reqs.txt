@@ -1,0 +1,69 @@
+# Financial Report Generation from CSV Files
+
+## Objective
+Create a system that generates a financial report based on data from a CSV file.
+
+## Input Data
+- A HTML file(statement.html) containing financial transactions with the following columns:
+  - "Za razdoblje (po datumu valute): 01.08.2025. do 08.08.2025." - the period of statement where "01.08.2025" means {start_date} and "do 08.08.2025." means the {end_date}
+  - `Datum valute` — transaction date and time
+  - `Platitelj/Primatelj` — payment description
+  - `Isplata` — transaction amount
+
+- An additional category mapping table (category_mapping.csv) that associates payment descriptions with expense categories. 
+  The payment description in the mapping table should be matches as "contains" from the  CSV file. It's not madtatory
+  we will have the equal description each time
+  If the description is not included in the table - we consider it as "other" category
+  Do not use any default mapping. If the category_mapping.csv is not present - all the transactions considered as "other"
+
+## Task Requirements
+1. Read and parse the HTML file containing transactions.
+2. Ignore the transactions where "Isplata" is empty
+2. Match each transaction's `description` to the corresponding expense category from the category mapping table.
+3. Aggregate the transaction amounts by category.
+4. Generate a financial report that includes:
+   - Total amounts spent per category
+5. Prepare a ready to use python script with example of usage in README.md   
+
+## Output Format
+- The final report should be generated in a structured Excel format(see financial_report_example.xlsx).
+- The output file ocntains multiple sheets - each per month. The sheet title has the following format: 01.08.2025.
+  We should populate the data in the sheet of the current month. If the sheet is not present - we need to create it.
+- Sheet structure: 
+  A1: "Доход" title. Plain text. Bolded
+  A2: {INCOME_VALUE}. Take it from env. variable {FIN_INCOME_VALUE}. Will be used as {income}. Place if not present, do not override.
+  B1: "Налоги" title. Plain text. Bolded
+  B2: {TAX_VALUE}. Take it from env. variable {FIN_TAX_VALUE}. Fixed sun. Will be used as {taxes}. Place if not present, do not override.
+  C1: "Еда" title. Plain text. Bolded
+  C2: {FOOD_VALUE}. Take it from env. variable {FIN_FOOD_VALUE}. Fixed sun. Will be used as {food}. Place if not present, do not override.
+  C3: {food} - total amount of the "Food" category. If already present in the file - we add the existing value to a total and put result into the cell. Use formula {food} - {existing C3 value} - {total amount of the "Food" category}
+  D1: "Комы" title. Plain text. Bolded
+  D2: {UTILITY_VALUE}. Take it from env. variable {FIN_UTILITY_VALUE}. Fixed sun. Will be used as {utility_bills}. Place if not present, do not override.
+  D3: {utility_bills} - total amount of the "Utility bills" category. If already present in the file - we add the existing value to a total and put result into the cell.  Use formula {utility_bills} - {existing D3 value} - {total amount of the "Utility bills" category}
+  E1: "Отложить" title. Plain text. Bolded 
+  E2: {SAVINGS_VALUE}. Take it from env. variable {FIN_SAVINGS_VALUE}. Will be used as {savings}. Place if not present, do not override.		
+  A5: "Бюджет" title. Plain text. Bolded
+  A6: {income} - {taxes} - {food} - {utility_bills} - {savings}. Will be used as {other}. Place if not present, do not override.
+  A7: {other} - total amount of the "Other" category. If already present in the file - we add the existing value to a total and put result into the cell. Use formula {other} - {existing A7 value} - {total amount of the "Other" category}
+  C5: "Наличка" title. Plain text. Bolded.
+  C6-C100: the cells are considered as manula entered expenses. If during the calucaltion we see any non-empty 
+  values in this range - we have to add them to "other" category and clean the C6-C100 cells
+
+  A12: "Заполнено по" title. Plain text. Bolded
+  A13: {end_date} in the format "08.08.2025"
+
+## Additional Notes
+- When reading CSV files, explicitly specify the file encoding as UTF-8 to properly decode special characters, such as accented letters or characters from non-ASCII alphabets.
+- statement_example.html contains example of the input file
+- category_mapping_example.csv - contains example of the mapping file
+- Ensure that the report is clear and well-structured, enabling easy analysis of expenses by category.
+- Handle possible missing or malformed data gracefully.
+- Use python
+- If the Output file is already present - make a backup file using it before override. 
+  The backup file name should contain the date it was created in a format "01_10_2025"
+- Add logs_{end_date}.log file where put all the calculation details for each transaction (timestamp, description, amount, mapped category, skipped or not)  
+- Add the "processed_periods" file where put the {start_date}, {end_date} info. If the processing period is overlaps with any existing period in the 
+  file - we place the error in the logs and do not process the report
+- Prepare a ready to use docker-compose file where will be our script with needed env. variables and shared directory to put the files  
+- Add the gitignore file, we want to populate only te readme, reqs.txt, requirenments.txt, docker-compose and the main logic script
+
