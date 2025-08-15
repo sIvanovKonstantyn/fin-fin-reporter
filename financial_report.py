@@ -169,37 +169,50 @@ def main():
     if os.path.exists('/app/data'):
         os.chdir('/app/data')
     
-    html_file = 'statement_example.html'
     output_file = 'financial_report.xlsx'
     
-    if not os.path.exists(html_file):
-        print(f"Error: {html_file} not found")
+    # Find all HTML files in current directory
+    html_files = [f for f in os.listdir('.') if f.endswith('.html')]
+    
+    if not html_files:
+        print("Error: No HTML files found")
         return
     
-    start_date, end_date = extract_dates(html_file)
-    if not start_date or not end_date:
-        print("Could not extract dates")
-        return
+    print(f"Found {len(html_files)} HTML files: {html_files}")
     
-    log_file = f"logs_{end_date.replace('.', '_')}.log"
-    
-    if check_period_overlap(start_date, end_date, log_file):
-        print(f"Period overlap detected. Check {log_file}")
-        return
-    
-    transactions = parse_transactions(html_file, log_file)
     mapping = load_mapping()
+    total_processed = 0
     
-    totals = {}
-    for t in transactions:
-        category = categorize(t['description'], mapping)
-        totals[category] = totals.get(category, 0) + t['amount']
-        log_transaction(log_file, t['description'], f"€{t['amount']:.2f}", category)
+    for html_file in html_files:
+        print(f"\nProcessing {html_file}...")
+        
+        start_date, end_date = extract_dates(html_file)
+        if not start_date or not end_date:
+            print(f"Could not extract dates from {html_file}")
+            continue
+        
+        log_file = f"logs_{end_date.replace('.', '_')}.log"
+        
+        if check_period_overlap(start_date, end_date, log_file):
+            print(f"Period overlap detected for {html_file}. Check {log_file}")
+            continue
+        
+        transactions = parse_transactions(html_file, log_file)
+        
+        totals = {}
+        for t in transactions:
+            category = categorize(t['description'], mapping)
+            totals[category] = totals.get(category, 0) + t['amount']
+            log_transaction(log_file, t['description'], f"€{t['amount']:.2f}", category)
+        
+        save_excel(totals, end_date, output_file)
+        print(f"Processed {len(transactions)} transactions from {html_file}")
+        for category, total in totals.items():
+            print(f"  {category}: €{total:.2f}")
+        
+        total_processed += len(transactions)
     
-    save_excel(totals, end_date, output_file)
-    print(f"Processed {len(transactions)} transactions")
-    for category, total in totals.items():
-        print(f"{category}: €{total:.2f}")
+    print(f"\nTotal processed: {total_processed} transactions")
     print(f"Files saved in: {os.getcwd()}")
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ docker-compose up --build
 ## Usage
 
 ### Local Usage
-1. Place HTML statement as `statement_example.html`
+1. Place HTML statement files (any `.html` files) in the project directory
 2. (Optional) Create `category_mapping.csv` for categorization
 3. Run:
 ```bash
@@ -26,7 +26,7 @@ python financial_report.py
 
 ### Docker Usage
 1. Place files in `data/` directory:
-   - `statement_example.html`
+   - HTML statement files (any `.html` files)
    - `category_mapping.csv` (optional)
 2. Run:
 ```bash

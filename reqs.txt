@@ -4,7 +4,7 @@
 Create a system that generates a financial report based on data from a CSV file.
 
 ## Input Data
-- A HTML file(statement.html) containing financial transactions with the following columns:
+- A HTML files(all html files from input directory that has .html extension) containing financial transactions with the following columns:
   - "Za razdoblje (po datumu valute): 01.08.2025. do 08.08.2025." - the period of statement where "01.08.2025" means {start_date} and "do 08.08.2025." means the {end_date}
   - `Datum valute` — transaction date and time
   - `Platitelj/Primatelj` — payment description
