@@ -103,41 +103,48 @@ def save_excel(totals, end_date, output_file):
         cell_value = ws[f'C{row}'].value
         if cell_value and isinstance(cell_value, (int, float)):
             manual_expenses += cell_value
-            ws[f'C{row}'] = None  # Clear the cell
+            ws[f'C{row}'] = None
     
-    # Add manual expenses to other category
-    other_total = totals.get('Other', 0) + manual_expenses
+    # Get budget values from environment variables
+    income = float(os.getenv('FIN_INCOME_VALUE', '6453'))
+    taxes = float(os.getenv('FIN_TAX_VALUE', '1652'))
+    food_budget = float(os.getenv('FIN_FOOD_VALUE', '900'))
+    utility_budget = float(os.getenv('FIN_UTILITY_VALUE', '1333.88'))
+    savings = float(os.getenv('FIN_SAVINGS_VALUE', '700'))
     
-    # Set headers and fixed values from environment variables
+    # Calculate budget for other category
+    other_budget = income - taxes - food_budget - utility_budget - savings
+    
+    # Set headers and fixed values
     ws['A1'] = 'Доход'
     ws['A1'].font = bold
     if not ws['A2'].value:
-        ws['A2'] = float(os.getenv('FIN_INCOME_VALUE', '6453'))
+        ws['A2'] = income
     
     ws['B1'] = 'Налоги'
     ws['B1'].font = bold
     if not ws['B2'].value:
-        ws['B2'] = float(os.getenv('FIN_TAX_VALUE', '1652'))
+        ws['B2'] = taxes
     
     ws['C1'] = 'Еда'
     ws['C1'].font = bold
     if not ws['C2'].value:
-        ws['C2'] = float(os.getenv('FIN_FOOD_VALUE', '900'))
+        ws['C2'] = food_budget
     
     ws['D1'] = 'Комы'
     ws['D1'].font = bold
     if not ws['D2'].value:
-        ws['D2'] = float(os.getenv('FIN_UTILITY_VALUE', '1333.88'))
+        ws['D2'] = utility_budget
     
     ws['E1'] = 'Отложить'
     ws['E1'].font = bold
     if not ws['E2'].value:
-        ws['E2'] = float(os.getenv('FIN_SAVINGS_VALUE', '700'))
+        ws['E2'] = savings
     
     ws['A5'] = 'Бюджет'
     ws['A5'].font = bold
     if not ws['A6'].value:
-        ws['A6'] = f'=A2-B2-C2-D2-E2'
+        ws['A6'] = other_budget
     
     ws['C5'] = 'Наличка'
     ws['C5'].font = bold
@@ -146,21 +153,25 @@ def save_excel(totals, end_date, output_file):
     ws['A12'].font = bold
     ws['A13'] = end_date
     
-    # Update category totals with formulas
+    # Calculate remaining amounts directly
     food_spent = totals.get('Food', 0)
     utility_spent = totals.get('Utility bills', 0)
+    other_spent = totals.get('Other', 0) + manual_expenses
     
     if food_spent > 0:
-        current_c3 = ws['C3'].value or 0
-        ws['C3'] = f'=C2-{current_c3}-{food_spent}'
+        current_c3 = ws['C3'].value
+        current_c3 = float(current_c3) if current_c3 and isinstance(current_c3, (int, float)) else 0
+        ws['C3'] = food_budget - current_c3 - food_spent
     
     if utility_spent > 0:
-        current_d3 = ws['D3'].value or 0
-        ws['D3'] = f'=D2-{current_d3}-{utility_spent}'
+        current_d3 = ws['D3'].value
+        current_d3 = float(current_d3) if current_d3 and isinstance(current_d3, (int, float)) else 0
+        ws['D3'] = utility_budget - current_d3 - utility_spent
     
-    if other_total > 0:
-        current_a7 = ws['A7'].value or 0
-        ws['A7'] = f'=A6-{current_a7}-{other_total}'
+    if other_spent > 0:
+        current_a7 = ws['A7'].value
+        current_a7 = float(current_a7) if current_a7 and isinstance(current_a7, (int, float)) else 0
+        ws['A7'] = other_budget - current_a7 - other_spent
     
     wb.save(output_file)
 

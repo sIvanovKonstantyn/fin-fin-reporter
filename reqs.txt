@@ -53,6 +53,7 @@ Create a system that generates a financial report based on data from a CSV file.
   A13: {end_date} in the format "08.08.2025"
 
 ## Additional Notes
+- Do NOT put the formulas into the output file but instead calculate the values and put the result
 - When reading CSV files, explicitly specify the file encoding as UTF-8 to properly decode special characters, such as accented letters or characters from non-ASCII alphabets.
 - statement_example.html contains example of the input file
 - category_mapping_example.csv - contains example of the mapping file
