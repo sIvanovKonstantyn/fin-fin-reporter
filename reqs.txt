@@ -9,6 +9,7 @@ Create a system that generates a financial report based on data from a CSV file.
   - `Datum valute` — transaction date and time
   - `Platitelj/Primatelj` — payment description
   - `Isplata` — transaction amount
+- If input file containts period from few monthes - we log the warning and ignire the file  
 
 - An additional category mapping table (category_mapping.csv) that associates payment descriptions with expense categories. 
   The payment description in the mapping table should be matches as "contains" from the  CSV file. It's not madtatory
@@ -23,12 +24,31 @@ Create a system that generates a financial report based on data from a CSV file.
 3. Aggregate the transaction amounts by category.
 4. Generate a financial report that includes:
    - Total amounts spent per category
+   - Details page where all the expenses will be stored in a format: {date} | {category} | {sum}  
+   - Catsh page: manual entered expenies wich wil lbe included in totals
+  4.1 Each month should be storeed in a separate file. Example: financial_report_01-01-2024. Each file contains two sheets: totals and details 
 5. Prepare a ready to use python script with example of usage in README.md   
 
-## Output Format
-- The final report should be generated in a structured Excel format(see financial_report_example.xlsx).
-- The output file ocntains multiple sheets - each per month. The sheet title has the following format: 01.08.2025.
-  We should populate the data in the sheet of the current month. If the sheet is not present - we need to create it.
+## Output Format (details sheet)
+  A1: "Дата" title. Plain text. Bolded
+  A2-A100: All dates of expensies processed
+  B1: "Категория" title. Plain text. Bolded
+  B2-B100: All categories of expensies processed
+  C1: "Сумма" title. Plain text. Bolded
+  C2-C100: All sums of expensies processed
+IMPROTANT: ALL the expensies from different files hsould be present in the details sheet and should NOT be removed
+
+## Output Format (cash sheet, create with titlesif not exist)
+  A1: "Дата" title. Plain text. Bolded
+  A2-A100: All dates of manual expensies entered
+  B1: "Категория" title. Plain text. Bolded
+  B2-B100: All categories of manual expensies entered
+  C1: "Сумма" title. Plain text. Bolded
+  C2-C100: All sums of manual expensies entered
+
+## Output Format (totals sheet)
+  If the sheet is not present - we need to create it.
+  Multiple HTML files from the same month should accumulate their totals in the same monthly file.
 - Sheet structure: 
   A1: "Доход" title. Plain text. Bolded
   A2: {INCOME_VALUE}. Take it from env. variable {FIN_INCOME_VALUE}. Will be used as {income}. Place if not present, do not override.
@@ -36,35 +56,49 @@ Create a system that generates a financial report based on data from a CSV file.
   B2: {TAX_VALUE}. Take it from env. variable {FIN_TAX_VALUE}. Fixed sun. Will be used as {taxes}. Place if not present, do not override.
   C1: "Еда" title. Plain text. Bolded
   C2: {FOOD_VALUE}. Take it from env. variable {FIN_FOOD_VALUE}. Fixed sun. Will be used as {food}. Place if not present, do not override.
-  C3: {food} - total amount of the "Food" category. If already present in the file - we add the existing value to a total and put result into the cell. Use formula {food} - {existing C3 value} - {total amount of the "Food" category}
+  C3: {food} - total amount of the "Food" category. Use formula {food} - {total "food" category expencies from "details" page + total "food" category expencies from "cash" page}
   D1: "Комы" title. Plain text. Bolded
   D2: {UTILITY_VALUE}. Take it from env. variable {FIN_UTILITY_VALUE}. Fixed sun. Will be used as {utility_bills}. Place if not present, do not override.
-  D3: {utility_bills} - total amount of the "Utility bills" category. If already present in the file - we add the existing value to a total and put result into the cell.  Use formula {utility_bills} - {existing D3 value} - {total amount of the "Utility bills" category}
+  D3: {utility_bills} - total amount of the "Utility bills" category. Use formula {utility_bills} - {total "utility bills" from "details" page + total "utility bills" from "cash" page} 
   E1: "Отложить" title. Plain text. Bolded 
   E2: {SAVINGS_VALUE}. Take it from env. variable {FIN_SAVINGS_VALUE}. Will be used as {savings}. Place if not present, do not override.		
-  A5: "Бюджет" title. Plain text. Bolded
-  A6: {income} - {taxes} - {food} - {utility_bills} - {savings}. Will be used as {other}. Place if not present, do not override.
-  A7: {other} - total amount of the "Other" category. If already present in the file - we add the existing value to a total and put result into the cell. Use formula {other} - {existing A7 value} - {total amount of the "Other" category}
-  C5: "Наличка" title. Plain text. Bolded.
-  C6-C100: the cells are considered as manula entered expenses. If during the calucaltion we see any non-empty 
-  values in this range - we have to add them to "other" category and clean the C6-C100 cells
+  F1: "Бюджет" title. Plain text. Bolded
+  F2: {income} - {taxes} - {food} - {utility_bills} - {savings}. Will be used as {other}. Place if not present, do not override.
+  F3: {other} - total amount of the "Other" category. Use formula: F2 - {total "other" from "details" page + total "other" from "cash" page}
+  G1: "Наличка" title. Plain text. Bolded.
+  G2: total from "cash" page
+  H1: "Заполнено по" title. Plain text. Bolded
+  H2: {end_date} in the format "08.08.2025"
 
-  A12: "Заполнено по" title. Plain text. Bolded
-  A13: {end_date} in the format "08.08.2025"
+
 
 ## Additional Notes
+- Populate in the order: "details", "cash" (only create if needed and read values if present), "totals". The "totals" page is always rely on and aligng with other pages.
 - Do NOT put the formulas into the output file but instead calculate the values and put the result
 - When reading CSV files, explicitly specify the file encoding as UTF-8 to properly decode special characters, such as accented letters or characters from non-ASCII alphabets.
-- statement_example.html contains example of the input file
-- category_mapping_example.csv - contains example of the mapping file
+- Handle HTML date formatting properly: extract only the first date when dates appear duplicated (e.g., "09.08.2025<br>09.08.2025" should become "09.08.2025")
+- statement_example.html contains example of the input file. Ignore it during the real calculation
+- category_mapping_example.csv - contains example of the mapping file. Ignore it during the real calculation
 - Ensure that the report is clear and well-structured, enabling easy analysis of expenses by category.
 - Handle possible missing or malformed data gracefully.
 - Use python
 - If the Output file is already present - make a backup file using it before override. 
   The backup file name should contain the date it was created in a format "01_10_2025"
 - Add logs_{end_date}.log file where put all the calculation details for each transaction (timestamp, description, amount, mapped category, skipped or not)  
-- Add the "processed_periods" file where put the {start_date}, {end_date} info. If the processing period is overlaps with any existing period in the 
+- Add the "processed_periods" file where put the {start_date}, {end_date} info. If the processing period overlaps with any existing period in the 
   file - we place the error in the logs and do not process the report
+- Overlap detection must use proper date comparison (not string comparison):
+  - Convert dates from DD.MM.YYYY format to datetime objects for accurate comparison
+  - Two periods overlap if: start_date1 <= end_date2 AND end_date1 >= start_date2
+  - Example: "01.08.2025 to 08.08.2025" should NOT overlap with "01.06.2022 to 30.06.2022"
+  - Example: "01.06.2022 to 30.06.2022" SHOULD overlap with "01.01.2022 to 31.12.2022"
+- Add detailed console logging to explain processing decisions:
+  - Show which HTML file is being processed
+  - Display extracted statement period (start_date to end_date)
+  - Show target Excel sheet name (first day of end_date month)
+  - Explain why files are skipped (overlap detection)
+  - Confirm successful sheet creation with transaction count
+  - Display category totals for each processed file
 - Prepare a ready to use docker-compose file where will be our script with needed env. variables and shared directory to put the files  
 - Add the gitignore file, we want to populate only te readme, reqs.txt, requirenments.txt, docker-compose and the main logic script
-
+- In the end, show the information about what's changed in the financial report file (addeed new sheet, changed some expencies from value to value etc.)
